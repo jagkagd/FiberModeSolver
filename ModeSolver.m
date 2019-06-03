@@ -222,7 +222,7 @@ classdef ModeSolver
             if obj.ndim == 0
                 [~, ind] = sort(cellfun(@(x) x(), val), 'descend');
             else
-                [~, ind] = sort(cellfun(@(x) sum(x(obj.indeps_vals), 'all', 'omitnan'), val), 'descend');
+                [~, ind] = sort(cellfun(@(x) sum(x(obj.indeps_vals), 'omitnan'), val), 'descend');
             end
             val = val(ind);
             if obj.HE11flag
