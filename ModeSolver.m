@@ -1,12 +1,25 @@
 classdef ModeSolver
     properties
+        % variables with form "var_" are the raw input
+        % lam: wavelength (m)
+        % r: radius of fiber (m)
+        % n1: core index (if it is wavelength-dependent, use n1lam)
+        % n2: cladding index (if it is wavelength-dependent, use n2lam)
         lam_, r_, n1_, n2_
         lam, r, k0, n1, n2
+        % ndim: dimensions of indepedent variables
         ndim
+        % indeps {indeps_keys, indeps_vals}: independent variable
         indeps_, indeps_vals, indeps_keys
         indeps
+        % vvmax: maximum v value for HEmv or HEvm modes
+        % HE11flag: only calculate HE11 mode
+        % n1lam, n2lam: see n1 and n2
         vvmax, HE11flag, n1lam, n2lam
+        % neffmlist: neff=n1+(n2-n2)*neffmlist
+        % neff: effective refractive index
         neffmlist_, neff
+        % modes: 
         modes, fields
         res
     end
@@ -621,7 +634,9 @@ classdef ModeSolver
                 end
                 [V, U, W] = obj.VUW_num({k0, r, n1, n2}, neff);
                 beta_ = k0.*neff;
-                if ismember(field, {'Szint', 'Sz_int_phi'})
+                if ismember(field, {'Sztotal'})
+                    foo_ = @() func(V, U, W, 0, 0, n1, n2, beta_, r, k0, p.Results.v)
+                elseif ismember(field, {'Szint', 'Sz_int_phi'})
                     foo_ = @(rmesh) func(V, U, W, rmesh./r, 0, n1, n2, beta_, r, k0, p.Results.v);
                 else
                     foo_ = @(rmesh, thetamesh) func(V, U, W, rmesh./r, thetamesh, n1, n2, beta_, r, k0, p.Results.v);
@@ -712,13 +727,13 @@ classdef ModeSolver
                 if ismember(mode, {'HE', 'EH'})
                     v = str2double(key(3));
                 end
-                for field0 = {'E', 'H', 'Sz', 'Szint', 'Sz_int_phi'}
+                for field0 = {'E', 'H', 'Sz', 'Szint', 'Sz_int_phi', 'Sztotal'}
                     field = field0{1};
                     mergefunc = @(fun) obj.mergefunc_(res, fun, key, field, 'v', v, 'delam', delam);
                     comp = @(fun) mergefunc(obj.lamd(fun));
                     if ismember(field, {'E', 'H'})
                         res.(key).(field) = structfun(comp, obj.fields.(mode).(field), 'UniformOutput', false);
-                    elseif ismember(field, {'Sz', 'Szint', 'Sz_int_phi'})
+                    elseif ismember(field, {'Sz', 'Szint', 'Sz_int_phi', 'Sztotal'})
                         res.(key).(field) = comp(obj.fields.(mode).(field));
                     end
                 end
